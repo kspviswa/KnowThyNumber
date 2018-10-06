@@ -1,6 +1,4 @@
-﻿// by Chtiwi Malek on CODICODE.COM
-
-var mousePressed = false;
+﻿var mousePressed = false;
 var lastX, lastY;
 var ctx;
 
