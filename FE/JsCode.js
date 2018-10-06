@@ -16,6 +16,10 @@ function InitThis() {
         clearArea();
     });
 
+    $('#upload-area').mousedown(function (e) {
+        uploadArea();
+    });
+
     $('#myCanvas').mousemove(function (e) {
         if (mousePressed) {
             Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, true);
@@ -24,19 +28,45 @@ function InitThis() {
 
     $('#myCanvas').mouseup(function (e) {
         mousePressed = false;
+        alert("mouseup")
     });
 
     $('#myCanvas').mouseleave(function (e) {
         mousePressed = false;
+        alert("mouseleave")
     });
-
-
 
     document.addEventListener('touchstart',function(e){ mapTouchEvents(e,'mousedown'); },true);
     document.addEventListener('touchmove',function(e){ mapTouchEvents(e,'mousemove'); },true);
     document.addEventListener('touchend',function(e){ mapTouchEvents(e,'mouseup'); },true);
     document.addEventListener('touchcancel',function(e){ mapTouchEvents(e,'mouseup'); },true);
 
+}
+
+function uploadArea() {
+    console.log("Inside Upload....");
+    var image = document.getElementById("myCanvas").toDataURL("image/png").replace("image/png", "image/octet-stream");
+    var data = new FormData();
+    data["file"] = image;
+    $.ajax({
+        url: 'http://localhost:9000/upload/',
+        type: 'POST',
+        data: data,
+        cache: false,
+        dataType: 'json',
+        processData: false, 
+        contentType: false,  
+        success: function( data , textStatus , jqXHR )
+        {                
+            if( typeof data.error === 'undefined' ) {                    
+                submitForm( event, data ); 
+            } else {                    
+                alert( 'ERRORS: ' + data.error ); 
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) { alert( 'error on upload' ); }
+        
+    });
 }
 
 function Draw(x, y, isDown) {
@@ -53,6 +83,10 @@ function Draw(x, y, isDown) {
     }
     lastX = x;
     lastY = y;
+
+    //alert("Drawing done....");
+    //console.log("Drawing done.....");
+    //doUpload();
 } 
 
 function clearArea() {
