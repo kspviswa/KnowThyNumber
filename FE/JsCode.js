@@ -15,7 +15,7 @@ function InitThis() {
     });
 
     $('#upload-area').mousedown(function (e) {
-        uploadArea();
+        uploadArea2();
     });
 
     $('#myCanvas').mousemove(function (e) {
@@ -26,12 +26,12 @@ function InitThis() {
 
     $('#myCanvas').mouseup(function (e) {
         mousePressed = false;
-        alert("mouseup")
+        //alert("mouseup")
     });
 
     $('#myCanvas').mouseleave(function (e) {
         mousePressed = false;
-        alert("mouseleave")
+        //alert("mouseleave")
     });
 
     document.addEventListener('touchstart',function(e){ mapTouchEvents(e,'mousedown'); },true);
@@ -42,10 +42,12 @@ function InitThis() {
 }
 
 function uploadArea() {
+    alert('Inside Upload....');
     console.log("Inside Upload....");
     var image = document.getElementById("myCanvas").toDataURL("image/png").replace("image/png", "image/octet-stream");
     var data = new FormData();
     data["file"] = image;
+    console.log(data);
     $.ajax({
         url: 'http://localhost:9000/upload/',
         type: 'POST',
@@ -65,6 +67,40 @@ function uploadArea() {
         error: function(jqXHR, textStatus, errorThrown) { alert( 'error on upload' ); }
         
     });
+}
+
+function uploadArea2() {
+    var canvas = document.getElementById("myCanvas")
+    canvas.toBlob(
+        function (blob) {
+            // Do something with the blob object,
+            // e.g. creating a multipart form for file uploads:
+            var formData = new FormData();
+            formData.append('file', blob, "predict.jpg");
+            $.ajax({
+                url: 'http://localhost:9000/upload/',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                dataType: 'html',
+                processData: false, 
+                contentType: false,  
+                success: function( data , textStatus , jqXHR )
+                {                
+                    if( typeof data.error === 'undefined' ) {                    
+                        submitForm( event, data ); 
+                    } else {                    
+                        alert( 'ERRORS: ' + data.error ); 
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) { alert( 'error on upload2' ); alert(textStatus);}
+                
+            });
+            /* ... */
+        },
+        'image/jpeg'
+    );
+
 }
 
 function Draw(x, y, isDown) {

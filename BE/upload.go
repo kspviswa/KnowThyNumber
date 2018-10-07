@@ -9,13 +9,24 @@ import (
 
 // UploadFile uploads a file to the server
 func UploadFile(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Inside upload \n")
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
+	// Save a copy of this request for debugging.
+	//requestDump, err := httputil.DumpRequest(r, true)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	//fmt.Println(string(requestDump))
+
 	file, handle, err := r.FormFile("file")
 	if err != nil {
+		fmt.Printf("upload error\n")
+		fmt.Println(err.Error())
 		fmt.Fprintf(w, "%v", err)
 		return
 	}
