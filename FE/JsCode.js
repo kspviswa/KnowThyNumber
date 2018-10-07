@@ -1,9 +1,10 @@
 ﻿var mousePressed = false;
 var lastX, lastY;
-var ctx;
+var ctx, ctx2;
 
 function InitThis() {
     ctx = document.getElementById('myCanvas').getContext("2d");
+    ctx2 = document.getElementById('myCanvas2').getContext("2d");
 
     $('#myCanvas').mousedown(function (e) {
         mousePressed = true;
@@ -69,6 +70,33 @@ function uploadArea() {
     });
 }
 
+function getDstImage(data) {
+    console.log("Entering into getDstImage")
+    var fname = "./img/"
+    switch(data["classification"]) {
+        case 1:
+            return fname+"1.jpg"
+        case 2:
+            return fname+"2.png"
+        case 3:
+            return fname+"3.png"
+        case 4:
+            return fname+"4.jpg"
+        case 5:
+            return fname+"5.png"
+        case 6:
+            return fname+"6.jpg"
+        case 7:
+            return fname+"7.png"
+        case 8:
+            return fname+"8.png"
+        case 9:
+            return fname+"9.png"
+        default:
+            return "error"
+    }
+}
+
 function uploadArea2() {
     var canvas = document.getElementById("myCanvas")
     canvas.toBlob(
@@ -82,16 +110,26 @@ function uploadArea2() {
                 type: 'POST',
                 data: formData,
                 cache: false,
-                dataType: 'html',
+                dataType: 'json',
                 processData: false, 
                 contentType: false,  
                 success: function( data , textStatus , jqXHR )
                 {                
                     if( typeof data.error === 'undefined' ) {                    
-                        submitForm( event, data ); 
+                        //submitForm( event, data ); 
                     } else {                    
                         alert( 'ERRORS: ' + data.error ); 
                     }
+
+                    console.log("Inside success of uploadArea2")
+
+                    var canvas = document.getElementById("myCanvas2");
+                    var ctx = canvas.getContext("2d");
+                    var image = new Image();
+                    image.src = getDstImage(data);
+                    image.onload = function() {
+                        ctx.drawImage(image, 0, 0);
+                    };
                 },
                 error: function(jqXHR, textStatus, errorThrown) { alert( 'error on upload2' ); alert(textStatus);}
                 
@@ -127,4 +165,6 @@ function clearArea() {
     // Use the identity matrix while clearing the canvas
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx2.setTransform(1, 0, 0, 1, 0, 0);
+    ctx2.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }

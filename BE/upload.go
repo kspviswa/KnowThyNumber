@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
+	"io"
 	"io/ioutil"
 	"math"
 	"mime/multipart"
@@ -52,7 +54,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func processImage(infile multipart.File) (newFile *os.File) {
+func processImage(infile multipart.File) (err error) {
 	imgSrc, _, err := image.Decode(infile)
 	if err != nil {
 		panic(err.Error())
@@ -86,32 +88,83 @@ func processImage(infile multipart.File) (newFile *os.File) {
 
 	// Encode the grayscale image to the new file
 	newFileName := "grayscale.png"
-	newfile, err := os.Create(newFileName)
+	newfile, err := os.Create("./files/" + newFileName)
 	if err != nil {
 		fmt.Printf("failed creating %s: %s", newfile, err)
-		panic(err.Error())
+		return err
 	}
 	//defer newfile.Close()
 	//png.Encode(newfile, grayScale)
 	png.Encode(newfile, grayImg)
 
-	return newfile
+	return nil
 }
 
 func saveFile(w http.ResponseWriter, file multipart.File, handle *multipart.FileHeader) {
-	file2 := processImage(file)
-	data, err := ioutil.ReadAll(file2)
+	err := processImage(file)
+	//data, err := ioutil.ReadAll(file2)
 	if err != nil {
 		fmt.Fprintf(w, "%v", err)
+		fmt.Println("%v", err)
 		return
 	}
 
-	err = ioutil.WriteFile("./files/"+handle.Filename, data, 0666)
+	//err = ioutil.WriteFile("./files/"+handle.Filename, data, 0666)
+	//if err != nil {
+	//	fmt.Fprintf(w, "%v", err)
+	//	return
+	//}
+	resp := predictNumber()
+	jsonResponse(w, http.StatusCreated, resp)
+}
+
+func postFile(filename string, targetUrl string) (string, error) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("file", filename)
 	if err != nil {
-		fmt.Fprintf(w, "%v", err)
-		return
+		fmt.Println("error writing to buffer")
+		return "", err
 	}
-	jsonResponse(w, http.StatusCreated, "File uploaded successfully!.")
+
+	// open file handle
+	fh, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("error opening file")
+		return "", err
+	}
+	defer fh.Close()
+
+	//iocopy
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		return "", err
+	}
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	resp_body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(resp.Status)
+	fmt.Println(string(resp_body))
+	return string(resp_body), nil
+}
+
+func predictNumber() string {
+	target_url := "http://localhost:5000/mnist/classify"
+	filename := "./files/grayscale.png"
+	resp, _ := postFile(filename, target_url)
+	return resp
 }
 
 func jsonResponse(w http.ResponseWriter, code int, message string) {
