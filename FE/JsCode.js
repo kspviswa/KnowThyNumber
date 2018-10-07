@@ -15,7 +15,7 @@ function InitThis() {
     });
 
     $('#upload-area').mousedown(function (e) {
-        uploadArea2();
+        //uploadArea2();
     });
 
     $('#myCanvas').mousemove(function (e) {
@@ -76,7 +76,7 @@ function uploadArea2() {
             // Do something with the blob object,
             // e.g. creating a multipart form for file uploads:
             var formData = new FormData();
-            formData.append('file', blob, "predict.jpg");
+            formData.append('file', blob, "predict.png");
             $.ajax({
                 url: 'http://localhost:9000/upload/',
                 type: 'POST',
@@ -98,7 +98,7 @@ function uploadArea2() {
             });
             /* ... */
         },
-        'image/jpeg'
+        'image/png'
     );
 
 }
